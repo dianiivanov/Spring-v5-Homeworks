@@ -3,9 +3,11 @@ package course.spring.cooking.recipes.service.impl;
 import course.spring.cooking.recipes.dao.UserRepository;
 import course.spring.cooking.recipes.enums.Gender;
 import course.spring.cooking.recipes.exception.EntityNotFoundException;
+import course.spring.cooking.recipes.exception.InvalidDataException;
 import course.spring.cooking.recipes.model.User;
 import course.spring.cooking.recipes.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,6 +23,7 @@ public class DefaultUserService implements UserService {
 
     @Override
     public User createUser(User user) {
+        user.setId(null);
         PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
         user.setPassword(encoder.encode(user.getPassword()));
         if (Objects.isNull(user.getUrl())) {
@@ -44,6 +47,12 @@ public class DefaultUserService implements UserService {
     }
 
     @Override
+    public User getUserByUsername(String username) {
+        return userRepository.findByUsername(username).orElseThrow(() ->
+                new InvalidDataException(String.format("Could not find user with username = %s", username)));
+    }
+
+    @Override
     public User updateUser(User user) {
         User oldUser = getUserById(user.getId());
         PasswordEncoder encoder = PasswordEncoderFactories.createDelegatingPasswordEncoder();
@@ -51,10 +60,17 @@ public class DefaultUserService implements UserService {
         return userRepository.save(user);
     }
 
+    @Override
     public User deleteUserById(String id) {
         User removedUser = getUserById(id);
         userRepository.deleteById(id);
         return removedUser;
+    }
+
+    @Override
+    public User getCurrentUser(){
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        return getUserByUsername(username);
     }
 }
 

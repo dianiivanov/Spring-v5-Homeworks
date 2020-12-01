@@ -1,16 +1,20 @@
 package course.spring.cooking.recipes.model;
 
+import lombok.Data;
 import lombok.NonNull;
+import org.apache.tomcat.jni.Local;
 import org.hibernate.validator.constraints.URL;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.Size;
+import javax.validation.constraints.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
+@Document(collection = "recipes")
+@Data
 public class Recipe {
-//    идентификатор на рецептата (MongoDB ObjectID - 24 символа);
+    //    идентификатор на рецептата (MongoDB ObjectID - 24 символа);
 //    идентификатор на потребителя споделил рецептата (MongoDB ObjectID - 24 символа);
 //    име на рецептата (до 80 символа);
 //    кратко описание на рецептата (до 256 символа);
@@ -21,27 +25,32 @@ public class Recipe {
 //    ключови думи - tags (списък от тагове - JSON Array);
 //    дата и час на споделяне (генерира се автоматично);
 //    дата и час на последна модификация (генерира се автоматично);
+    @Id
+    @Pattern(regexp = "^[A-Fa-f0-9]{24}$")
+    String id;
+    @Pattern(regexp = "^[A-Fa-f0-9]{24}$")
+    String userId;
     @NotNull
     @NonNull
-    @Size(max=80)
+    @Size(max = 80)
     private String name;
-
     @NotNull
     @NonNull
     @Size(max = 256)
     private String shortDescription;
-
     @NotNull
     @NonNull
     private String longDescription;
-
     @NotNull
     @NonNull
     @Positive
     private Integer minutes;
     @URL
     private String image;
-
+    @NonNull
     private List<String> products = new ArrayList<>();
     private List<String> keywords = new ArrayList<>();
+
+    private LocalDateTime created = LocalDateTime.now();
+    private LocalDateTime modified = LocalDateTime.now();
 }

@@ -1,7 +1,10 @@
 package course.spring.cooking.recipes.web;
 
+import course.spring.cooking.recipes.exception.EntityNotFoundException;
 import course.spring.cooking.recipes.exception.InvalidDataException;
+import course.spring.cooking.recipes.model.Recipe;
 import course.spring.cooking.recipes.model.User;
+import course.spring.cooking.recipes.service.RecipeService;
 import course.spring.cooking.recipes.service.UserService;
 
 import static course.spring.cooking.recipes.util.ErrorUtils.getAllErrors;
@@ -22,6 +25,8 @@ import java.util.List;
 public class UserController {
     @Autowired
     UserService userService;
+    @Autowired
+    RecipeService recipeService;
 
     @GetMapping
     List<User> getAllUsers() {
@@ -29,7 +34,7 @@ public class UserController {
     }
 
     @PostMapping
-    ResponseEntity<User> postUser(@Valid @RequestBody User user, Errors errors) {
+    ResponseEntity<User> createUser(@Valid @RequestBody User user, Errors errors) {
         if (errors.hasErrors()) {
             throw new InvalidDataException("Invalid user data", getAllErrors(errors));
         }
@@ -58,7 +63,18 @@ public class UserController {
     }
 
     @DeleteMapping("/{id:^[A-Fa-f0-9]{24}$}")
-    User deleteUser(@PathVariable("id") String id){
+    User deleteUser(@PathVariable("id") String id) {
         return userService.deleteUserById(id);
+    }
+
+    @GetMapping("/{id:^[A-Fa-f0-9]{24}$}/recipes/{recipeId:^[A-Fa-f0-9]{24}$}")
+    Recipe getRecipeByIdForUser(@PathVariable String id, @PathVariable String recipeId) {
+        userService.getUserById(id);
+        Recipe recipeFound = recipeService.getRecipeById(recipeId);
+        if (!recipeFound.getUserId().equals(id)) {
+            throw new EntityNotFoundException(
+                    String.format("Recipe for user with id = %s not found.", id));
+        }
+        return recipeFound;
     }
 }
